@@ -76,7 +76,10 @@ class CustomFieldChoiceSetImportForm(CSVModelForm):
     extra_choices = SimpleArrayField(
         base_field=forms.CharField(),
         required=False,
-        help_text=_('Comma-separated list of field choices')
+        help_text=_(
+            'Quoted string of comma-separated field choices with optional labels separated by colon: '
+            '"choice1:First Choice,choice2:Second Choice"'
+        )
     )
 
     class Meta:
@@ -84,6 +87,17 @@ class CustomFieldChoiceSetImportForm(CSVModelForm):
         fields = (
             'name', 'description', 'extra_choices', 'order_alphabetically',
         )
+
+    def clean_extra_choices(self):
+        if isinstance(self.cleaned_data['extra_choices'], list):
+            data = []
+            for line in self.cleaned_data['extra_choices']:
+                try:
+                    value, label = line.split(':', maxsplit=1)
+                except ValueError:
+                    value, label = line, line
+                data.append((value, label))
+            return data
 
 
 class CustomLinkImportForm(CSVModelForm):
